@@ -1,0 +1,184 @@
+{% extends "base.html" %}
+{% block title %}ScreenScout — Find Your Next Movie{% endblock %}
+
+{% block content %}
+
+<section class="hero">
+    <span class="hero-badge">Content-Based Recommendation Engine</span>
+    <h1>Scout Your Next <span class="gradient-text">Favorite Movie</span></h1>
+    <p>Pick a movie you enjoyed, and ScreenScout finds similar ones using TF-IDF and cosine similarity — across Hollywood, Bollywood, and Tollywood.</p>
+
+    <form method="POST" class="search-form">
+        <input list="movie-list" name="movie" placeholder="Type or select a movie..." required
+               value="{{ selected_movie or '' }}">
+        <datalist id="movie-list">
+            {% for movie in movies %}
+                <option value="{{ movie }}">
+            {% endfor %}
+        </datalist>
+        <button type="submit">Recommend</button>
+    </form>
+
+    <div class="stats-row">
+        <div class="stat"><span class="stat-num">{{ movies|length }}+</span><span class="stat-label">Movies</span></div>
+        <div class="stat"><span class="stat-num">7</span><span class="stat-label">Genres</span></div>
+        <div class="stat"><span class="stat-num">3</span><span class="stat-label">Industries</span></div>
+    </div>
+</section>
+
+{% if error %}
+    <div class="alert">⚠️ {{ error }}</div>
+{% endif %}
+
+{% if recommendations %}
+<section class="spotlight" id="results">
+
+    {% if selected_movie_data %}
+    <div class="selected-movie-banner" data-genre="{{ selected_movie_data.genre_key }}">
+        <div class="selected-poster" data-genre="{{ selected_movie_data.genre_key }}">
+            {% if selected_movie_data.poster %}
+                <img src="{{ selected_movie_data.poster }}" alt="{{ selected_movie_data.title }}">
+            {% else %}
+                <div class="poster-fallback big" data-genre="{{ selected_movie_data.genre_key }}">{{ selected_movie_data.title[0] }}</div>
+            {% endif %}
+        </div>
+        <div class="selected-info">
+            <span class="spotlight-label">You selected</span>
+            <h2>{{ selected_movie_data.title }}</h2>
+            <span class="tag"><i class="dot" data-genre="{{ selected_movie_data.genre_key }}"></i>{{ selected_movie_data.genre }} • {{ selected_movie_data.industry }}</span>
+        </div>
+    </div>
+    {% endif %}
+
+    <h3 class="results-heading">Recommended for you</h3>
+    <div class="poster-grid">
+        {% for movie in recommendations %}
+        <div class="poster-card large" data-genre="{{ movie.genre_key }}">
+            <div class="poster-wrap" data-genre="{{ movie.genre_key }}">
+                {% if movie.poster %}
+                    <img src="{{ movie.poster }}" alt="{{ movie.title }}" loading="lazy">
+                {% else %}
+                    <div class="poster-fallback" data-genre="{{ movie.genre_key }}">{{ movie.title[0] }}</div>
+                {% endif %}
+                <span class="match-badge">{{ movie.score }}%</span>
+            </div>
+            <div class="poster-info">
+                <h4>{{ movie.title }}</h4>
+                <span class="tag"><i class="dot" data-genre="{{ movie.genre_key }}"></i>{{ movie.genre }} • {{ movie.industry }}</span>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+<div class="section-divider"></div>
+{% endif %}
+
+<!-- ===== GENRE BOXES ===== -->
+{% for section in genre_sections %}
+<section class="genre-box" data-genre="{{ section.key }}">
+    <div class="genre-box-header" data-genre="{{ section.key }}">
+        <h2><i class="dot" data-genre="{{ section.key }}"></i>{{ section.name }}</h2>
+        <span class="genre-count">{{ section.total }} movies</span>
+    </div>
+
+    <div class="poster-grid" id="genre-grid-{{ section.key }}">
+        {% for movie in section.movies %}
+        <form method="POST">
+            <input type="hidden" name="movie" value="{{ movie.title }}">
+            <button type="submit" class="poster-card clickable" data-genre="{{ movie.genre_key }}">
+                <div class="poster-wrap" data-genre="{{ movie.genre_key }}">
+                    {% if movie.poster %}
+                        <img src="{{ movie.poster }}" alt="{{ movie.title }}" loading="lazy">
+                    {% else %}
+                        <div class="poster-fallback" data-genre="{{ movie.genre_key }}">{{ movie.title[0] }}</div>
+                    {% endif %}
+                </div>
+                <div class="poster-info">
+                    <h4>{{ movie.title }}</h4>
+                    <span class="tag">{{ movie.industry }}</span>
+                </div>
+            </button>
+        </form>
+        {% endfor %}
+    </div>
+
+    {% if section.total > page_size %}
+    <div class="see-more-wrap">
+        <button type="button" class="seeMoreGenreBtn" data-genre="{{ section.key }}" data-genre-name="{{ section.name }}" data-offset="{{ page_size }}" data-total="{{ section.total }}">
+            See More {{ section.name }}
+        </button>
+    </div>
+    {% endif %}
+</section>
+{% endfor %}
+
+<script>
+const pageSize = {{ page_size }};
+
+{% if recommendations %}
+document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'start' });
+{% endif %}
+
+function createPosterCard(movie) {
+    const form = document.createElement('form');
+    form.method = 'POST';
+
+    const hidden = document.createElement('input');
+    hidden.type = 'hidden';
+    hidden.name = 'movie';
+    hidden.value = movie.title;
+    form.appendChild(hidden);
+
+    const btnCard = document.createElement('button');
+    btnCard.type = 'submit';
+    btnCard.className = 'poster-card clickable';
+    btnCard.setAttribute('data-genre', movie.genre_key);
+
+    const posterHtml = movie.poster
+        ? `<div class="poster-wrap" data-genre="${movie.genre_key}"><img src="${movie.poster}" alt="${movie.title}" loading="lazy"></div>`
+        : `<div class="poster-wrap" data-genre="${movie.genre_key}"><div class="poster-fallback" data-genre="${movie.genre_key}">${movie.title.charAt(0)}</div></div>`;
+
+    btnCard.innerHTML = posterHtml + `
+        <div class="poster-info">
+            <h4>${movie.title}</h4>
+            <span class="tag">${movie.industry}</span>
+        </div>`;
+
+    form.appendChild(btnCard);
+    return form;
+}
+
+document.querySelectorAll('.seeMoreGenreBtn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+        const genreKey = btn.getAttribute('data-genre');
+        const genreName = btn.getAttribute('data-genre-name');
+        let offset = parseInt(btn.getAttribute('data-offset'));
+        const total = parseInt(btn.getAttribute('data-total'));
+        const grid = document.getElementById(`genre-grid-${genreKey}`);
+
+        btn.disabled = true;
+        btn.textContent = 'Loading...';
+
+        try {
+            const res = await fetch(`/load-more-genre?genre=${encodeURIComponent(genreName)}&offset=${offset}&limit=${pageSize}`);
+            const data = await res.json();
+            data.forEach(movie => grid.appendChild(createPosterCard(movie)));
+
+            offset += data.length;
+            btn.setAttribute('data-offset', offset);
+
+            if (offset >= total || data.length === 0) {
+                btn.style.display = 'none';
+            } else {
+                btn.disabled = false;
+                btn.textContent = `See More ${genreName}`;
+            }
+        } catch (e) {
+            btn.disabled = false;
+            btn.textContent = `See More ${genreName}`;
+        }
+    });
+});
+</script>
+
+{% endblock %}

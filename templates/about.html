@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}About — ScreenScout{% endblock %}
+
+{% block content %}
+<section class="about-hero">
+    <span class="hero-badge">How It Works</span>
+    <h1>About ScreenScout</h1>
+    <p>ScreenScout is a content-based movie recommendation system built for Task-03 — it suggests movies by analyzing genre and thematic similarity, not user ratings.</p>
+</section>
+
+<section class="about-grid">
+    <div class="about-card">
+        <div class="about-icon">📊</div>
+        <h3>1. Data Representation</h3>
+        <p>Each movie is tagged with a genre and a short description built from genre-specific keywords (action, romance, horror, comedy, etc).</p>
+    </div>
+    <div class="about-card">
+        <div class="about-icon">🔢</div>
+        <h3>2. TF-IDF Vectorization</h3>
+        <p>Descriptions are converted into numeric vectors using Term Frequency–Inverse Document Frequency, capturing how distinctive each word is.</p>
+    </div>
+    <div class="about-card">
+        <div class="about-icon">📐</div>
+        <h3>3. Cosine Similarity</h3>
+        <p>The angle between every pair of movie vectors is measured — smaller angle means more similar content.</p>
+    </div>
+    <div class="about-card">
+        <div class="about-icon">🎯</div>
+        <h3>4. Top-N Recommendation</h3>
+        <p>When you pick a movie, the system ranks all others by similarity score and returns the top 5 matches.</p>
+    </div>
+</section>
+
+<section class="tech-section">
+    <h2>Tech Stack</h2>
+    <div class="tech-grid">
+        <div class="tech-item"><span class="tech-name">Python</span><span class="tech-desc">Core language</span></div>
+        <div class="tech-item"><span class="tech-name">Flask</span><span class="tech-desc">Backend & routing</span></div>
+        <div class="tech-item"><span class="tech-name">Pandas</span><span class="tech-desc">Data handling</span></div>
+        <div class="tech-item"><span class="tech-name">Scikit-learn</span><span class="tech-desc">TF-IDF & similarity</span></div>
+        <div class="tech-item"><span class="tech-name">HTML / CSS</span><span class="tech-desc">Frontend</span></div>
+    </div>
+</section>
+
+<section class="coverage-section">
+    <h2>Dataset Coverage</h2>
+    <div class="coverage-grid">
+        <div class="coverage-card">
+            <h4>🎭 Genres (color-coded)</h4>
+            <div class="legend">
+                <span><i class="dot" data-genre="action"></i>Action</span>
+                <span><i class="dot" data-genre="romance"></i>Romance</span>
+                <span><i class="dot" data-genre="horror"></i>Horror</span>
+                <span><i class="dot" data-genre="comedy"></i>Comedy</span>
+                <span><i class="dot" data-genre="motivational"></i>Motivational</span>
+                <span><i class="dot" data-genre="biopic"></i>Biopic</span>
+                <span><i class="dot" data-genre="drama"></i>Drama</span>
+            </div>
+        </div>
+        <div class="coverage-card">
+            <h4>🌍 Industries</h4>
+            <p>Hollywood, Bollywood, Tollywood</p>
+        </div>
+    </div>
+</section>
+{% endblock %}
